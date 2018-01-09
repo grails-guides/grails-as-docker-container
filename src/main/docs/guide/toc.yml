@@ -1,0 +1,10 @@
+training:
+  title: Training
+gettingStarted: 
+  title: Getting Started
+  howto: How to complete the guide
+writing:
+  title: Writing the Guide
+  docker: Install and configure Docker
+helpWithGrails:
+  title: Help with Grails  
