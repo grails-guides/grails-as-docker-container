@@ -1,0 +1,31 @@
+In the previous example we have created three Gradle tasks to be able to build the image. There are two _issues_ with
+the `createDockerfile` task:
+
+- This is not the standard way to define a `Dockerfile` but a DSL built on top of it
+- You need to use Gradle to build the image instead of just only Docker
+
+As the task `prepareDocker` copy all the files in `src/main/docker` to the temporal build directory be can create the
+`Dockerfile` there.
+
+[source, Dockerfile]
+.src/main/docker/Dockerfile
+----
+FROM openjdk:8u151-jdk-alpine
+MAINTAINER John Doe "john.doe@example.com"
+
+EXPOSE 8080
+
+WORKDIR /app
+COPY *.jar application.jar
+
+CMD ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app/application.jar"]
+----
+
+This approach has the following advantages:
+
+- It is possible to build the Docker image executing: `docker build -t grails-sample/complete:0.1` in case we need to
+test something manually without Gradle. Besides this, if there is a new Docker feature that we want to use we do not need
+to wait until the Docker Java Library and the Gradle Docker plugin are updated.
+- It is easier to read and modify the `Dockerfile` than using the DSL.
+- We can remove the `createDockerfile` gradle task because now we maintain the `Dockerfile` in `src/main/docker` directory.
+- We can delete the file `src/main/docker/app-entrypoint.sh` because we now define the `CMD` in `Dockerfile`.
