@@ -11,5 +11,5 @@ include::{sourceDir}/build.gradle[indent=0, tag=apply]
 ----
 
 <1> Gradle Docker Plugin
-
+<2> Remove `war` plugin because we'll generate a runnable jar
 

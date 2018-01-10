@@ -6,5 +6,9 @@ gettingStarted:
 writing:
   title: Writing the Guide
   docker: Install and configure Docker
+  gradle: Gradle Docker plugin
+  gradleDockerTasks: Gradle Docker Tasks
+building:
+  title: Building the app
 helpWithGrails:
   title: Help with Grails  

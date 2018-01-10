@@ -1,6 +1,9 @@
+//tag::import[]
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+//end::import[]
 
+//tag::buildscript[]
 buildscript {
     repositories {
         mavenLocal()
@@ -12,22 +15,25 @@ buildscript {
         classpath "gradle.plugin.com.energizedwork:idea-gradle-plugins:1.4"
         classpath "org.grails.plugins:hibernate5:${gormVersion-".RELEASE"}"
         classpath "com.bertramlabs.plugins:asset-pipeline-gradle:2.14.6"
-        classpath "com.bmuschko:gradle-docker-plugin:3.2.1"
+        classpath "com.bmuschko:gradle-docker-plugin:3.2.1" // <1>
     }
 }
+//end::buildscript[]
 
 version "0.1"
 group "demo"
 
+//tag::apply[]
 apply plugin:"eclipse"
 apply plugin:"idea"
-//apply plugin:"war"
+//apply plugin:"war" // <2>
 apply plugin:"org.grails.grails-web"
 apply plugin:"com.energizedwork.webdriver-binaries"
 apply plugin:"com.energizedwork.idea-project-components"
 apply plugin:"asset-pipeline"
 apply plugin:"org.grails.grails-gsp"
-apply plugin:"com.bmuschko.docker-remote-api"
+apply plugin:"com.bmuschko.docker-remote-api" // <1>
+//end::apply[]
 
 repositories {
     mavenLocal()
@@ -91,12 +97,15 @@ assets {
     minifyCss = true
 }
 
+//tag::extVariables[]
 ext {
-    dockerTag = "grails-sample/${project.name}:${project.version}".toLowerCase()
-    dockerBuildDir = mkdir("${buildDir}/docker")
+    dockerTag = "grails-sample/${project.name}:${project.version}".toLowerCase() // <1>
+    dockerBuildDir = mkdir("${buildDir}/docker") // <2>
 }
+//end::extVariables[]
 
-task prepareDocker(type: Copy, dependsOn: assemble) {
+//tag::prepareDocker[]
+task prepareDocker(type: Copy, dependsOn: assemble) { // <3>
     description = 'Copy files from src/main/docker and application jar to Docker temporal build directory'
     group = 'Docker'
 
@@ -105,8 +114,10 @@ task prepareDocker(type: Copy, dependsOn: assemble) {
 
     into dockerBuildDir
 }
+//end::prepareDocker[]
 
-task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) {
+//tag::createDockerfile[]
+task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
     description = 'Create a Dockerfile file'
     group = 'Docker'
 
@@ -120,16 +131,19 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) {
     workingDir '/app'
 
     copyFile jar.archiveName, 'application.jar'
-    copyFile 'app-entrypoint.sh', 'app-entrypoint.sh'
+    copyFile 'app-entrypoint.sh', 'app-entrypoint.sh' // <5>
     runCommand 'chmod +x app-entrypoint.sh'
 
-    entryPoint '/app/app-entrypoint.sh'
+    entryPoint '/app/app-entrypoint.sh' // <5>
 }
+//end::createDockerfile[]
 
-task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) {
+//tag::buildImage[]
+task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) { // <6>
     description = 'Create Docker image to run the Grails application'
     group = 'Docker'
 
     inputDir = file(dockerBuildDir)
     tag = dockerTag
 }
+//end::buildImage[]
