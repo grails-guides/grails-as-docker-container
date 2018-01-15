@@ -7,6 +7,7 @@ writing:
   title: Writing the Guide
   docker: Install and configure Docker
   gradle: Gradle Docker plugin
+  appEntry: App Entry Script
   gradleDockerTasks: Gradle Docker Tasks
 building:
   title: Building the app
