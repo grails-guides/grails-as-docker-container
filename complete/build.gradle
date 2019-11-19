@@ -11,8 +11,7 @@ buildscript {
     }
     dependencies {
         classpath "org.grails:grails-gradle-plugin:$grailsVersion"
-        classpath "gradle.plugin.com.energizedwork.webdriver-binaries:webdriver-binaries-gradle-plugin:1.4"
-        classpath "gradle.plugin.com.energizedwork:idea-gradle-plugins:1.4"
+        classpath "gradle.plugin.com.github.erdi.webdriver-binaries:webdriver-binaries-gradle-plugin:2.1"
         classpath "org.grails.plugins:hibernate5:7.0.0"
         classpath "com.bertramlabs.plugins:asset-pipeline-gradle:3.0.11"
         classpath "com.bmuschko:gradle-docker-plugin:3.2.1" // <1>
@@ -28,8 +27,7 @@ apply plugin:"eclipse"
 apply plugin:"idea"
 //apply plugin:"war" // <2>
 apply plugin:"org.grails.grails-web"
-apply plugin:"com.energizedwork.webdriver-binaries"
-apply plugin:"com.energizedwork.idea-project-components"
+apply plugin:"com.github.erdi.webdriver-binaries"
 apply plugin:"com.bertramlabs.asset-pipeline"
 apply plugin:"org.grails.grails-gsp"
 apply plugin:"com.bmuschko.docker-remote-api" // <1>
