@@ -8,7 +8,7 @@ Alternatively, you can create a Docker file manually.
 [source, Dockerfile]
 .src/main/docker/Dockerfile
 ----
-FROM openjdk:8u151-jdk-alpine
+FROM adoptopenjdk/openjdk8:jdk8u232-b09-alpine
 MAINTAINER John Doe "john.doe@example.com"
 
 EXPOSE 8080

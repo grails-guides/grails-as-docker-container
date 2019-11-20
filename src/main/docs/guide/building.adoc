@@ -14,7 +14,7 @@ After creating the new Gradle tasks, now we can execute:
 :complete:buildImage # <2>
 Building image using context '/home/ivan/workspaces/oci/guides/grails-as-docker-container/complete/build/docker'.
 Using tag 'grails-sample/complete:0.1' for image.
-Step 1/8 : FROM openjdk:8u151-jdk-alpine
+Step 1/8 : FROM adoptopenjdk/openjdk8:jdk8u232-b09-alpine
 ---> 3642e636096d
 Step 2/8 : MAINTAINER John Doe "john.doe@example.com"
 ---> Using cache
