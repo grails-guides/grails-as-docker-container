@@ -135,7 +135,7 @@ task createDockerfile(type: Dockerfile, dependsOn: prepareDocker) { // <4>
 
     destFile = project.file("${dockerBuildDir}/Dockerfile")
 
-    from 'openjdk:8u151-jdk-alpine'
+    from 'adoptopenjdk/openjdk8:jdk8u232-b09-alpine'
 
     exposePort 8080
 
