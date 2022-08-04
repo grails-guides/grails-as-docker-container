@@ -1,10 +1,183 @@
+buildscript {
+    repositories {
+        maven { url = "https://repo.grails.org/grails/core" }
+    }
+
+    dependencies {
+        classpath "org.grails:grails-docs:5.1.9"
+    }
+}
+
+import groovy.json.*
+
 plugins {
-    id 'org.asciidoctor.convert' version '1.5.3'
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
 }
 
 asciidoctorj {
-    version = '1.5.4'
+    version = '2.5.4'
 }
 
-apply from:"https://raw.githubusercontent.com/grails/grails-guides/master/gradle/guide-build.gradle"
+// apply from:"https://raw.githubusercontent.com/grails/grails-guides/master/gradle/guide-build.gradle"
 
+
+apply plugin:'base'
+def GRAILS_GUIDES_GROUP = 'X - Grails Guides'
+
+def commonGithubOrg = 'grails'
+def commonGithubSlug = 'grails-guides'
+def commonBranch = 'master'
+
+task prepareResources {
+    group = GRAILS_GUIDES_GROUP
+    description = 'Downloads grails-guides repository master branch and unzip it to build folder'   
+    doLast {
+        ant.mkdir(dir:buildDir)
+        ant.get(src:"https://github.com/${commonGithubOrg}/${commonGithubSlug}/archive/${commonBranch}.zip", dest:"${buildDir}/resources.zip")    
+        ant.unzip(src:"${buildDir}/resources.zip", dest:"${buildDir}/resources")
+    }
+}
+
+task copyLocalGuideImgResources(type: Copy) {
+    group = GRAILS_GUIDES_GROUP
+    description = 'Copy local image resources to build folder'  
+    onlyIf { new File('src/main/resources/img').exists() }
+    mustRunAfter prepareResources
+    from ('src/main/resources/img') {
+        include '*.png'
+        include '*.gif'
+        include '*.jpg'
+        include '*.svg'
+        include '*.jpeg'
+    }
+    into "${buildDir}/resources/grails-guides-master/src/main/resources/img"
+}
+
+task publishGuide(type: grails.doc.gradle.PublishGuide) {
+    group = GRAILS_GUIDES_GROUP
+    description = 'Generate Guide'  
+    dependsOn prepareResources, copyLocalGuideImgResources
+
+    def localResourcesDir = "${buildDir}/resources/${commonGithubSlug}-${commonBranch}"
+    // def localResourcesDir = "../grails-guides/"
+    // No language setting because we want the English guide to be
+    // generated with a 'en' in the path, but the source is in 'en'
+    // so that it's easy to track with git.
+    targetDir = project.file("${buildDir}/docs")
+    sourceRepo = "https://github.com/${githubSlug}/edit/$githubBranch/src/main/docs"
+    sourceDir = new File(projectDir, "src/main/docs")
+    propertiesFiles = [ new File(projectDir, "gradle.properties"), new File(projectDir, "complete/gradle.properties") ]
+    asciidoc = true
+    resourcesDir = project.file("${localResourcesDir}/src/main/resources")
+    properties = [   
+        'safe':'UNSAFE',
+        'commondir':project.file("${localResourcesDir}/src/main/docs"),
+        'sourceDir':project.file('complete').absolutePath,     
+        'javaee': 'https://docs.oracle.com/javaee/7/api/',
+        'javase': 'https://docs.oracle.com/javase/7/docs/api/',
+        'groovyapi': 'http://docs.groovy-lang.org/latest/html/gapi/',
+        'grailsapi': 'http://docs.grails.org/latest/api/',
+        'gormapi': 'http://gorm.grails.org/latest/api/',         
+        'springapi': 'https://docs.spring.io/spring/docs/current/javadoc-api/'
+    ]
+    doLast {
+        ant.move(file:"${project.buildDir}/docs/guide/single.html",
+                 tofile:"${project.buildDir}/docs/guide/index.html", overwrite:true)
+        new File(project.buildDir, "docs/index.html").text = '''
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<meta http-equiv="refresh" content="0; url=guide/index.html" />
+</head>
+
+</body>
+</html>
+''' 
+    }
+}
+
+task updateGuidesJson {
+    group = GRAILS_GUIDES_GROUP
+    description = 'Updates the gh-pages/guides.json with the Guide information as JSON' 
+    doLast {
+        def jsonSlurper = new JsonSlurper()
+        def f = new File("gh-pages/guides.json")
+        def json = []
+        if(f.exists()) {
+            json = f.withReader {
+                jsonSlurper.parse(it)
+            }
+        }
+
+        def existing = json.find {
+            it.name == project.name && it.githubBranch == project.githubBranch
+        }
+        if (!existing) {
+            existing = json.find {
+                it.name == project.name &&
+                        'master' == project.githubBranch &&
+                        !it.githubBranch
+            }
+        }
+        def data = [:]
+        if(existing) {
+            data = existing
+        }
+        else {
+            json.add(data)
+        }
+        data.putAll(
+            githubBranch: project.githubBranch,
+            name: project.name,
+            title: project.title,
+            subtitle: project.subtitle,
+            authors:project.authors,
+            githubSlug:project.githubSlug,
+            category:project.category,
+            publicationDate:project.publicationDate
+        )
+
+        if(project.hasProperty('tags')) {
+            data.put("tags", project.tags.split(',')*.trim())
+        }
+
+        if ( f.exists() ) {
+            f.text = JsonOutput.toJson(json)
+        }
+    }
+}
+
+def isPropertyUndefined = { propertyName ->
+    !project.hasProperty(propertyName) || project.getProperty(propertyName) == 'TODO'
+}
+
+gradle.taskGraph.whenReady { graph ->
+    if (graph.hasTask(":publishGuide")) {
+        if ( isPropertyUndefined('title') ) {
+            throw new GradleException("Set project property `title` in gradle.properties")
+        }
+        if ( isPropertyUndefined('subtitle') ) {        
+            throw new GradleException("Set project property `subtitle` in gradle.properties")
+        }
+        if ( isPropertyUndefined('authors') ) {                
+            throw new GradleException("Set project property `authors` in gradle.properties")
+        }
+        if ( isPropertyUndefined('githubSlug') || !project.getProperty("githubSlug").startsWith('grails-guides/') ) {
+            throw new GradleException("Set project property `githubSlug` in gradle.properties. It must start with grails-guides/")
+        }
+        if ( isPropertyUndefined('tags') ) {        
+            throw new GradleException("Set project property `tags` in gradle.properties")
+        }
+        if ( isPropertyUndefined('category') ) {        
+            throw new GradleException("Set project property `category` in gradle.properties")
+        }
+        if ( isPropertyUndefined('publicationDate') ) {        
+            throw new GradleException("Set project property `publicationDate` dd MMM yyyy in gradle.properties")
+    } else {
+            try {
+                Date.parse('dd MMM yyyy', project.getProperty('publicationDate'))
+            } catch(java.text.ParseException e) {
+            }
+        }
+    }    
+}

@@ -14,15 +14,15 @@ After creating the new Gradle tasks, now we can execute:
 :complete:buildImage # <2>
 Building image using context '/home/ivan/workspaces/oci/guides/grails-as-docker-container/complete/build/docker'.
 Using tag 'grails-sample/complete:0.1' for image.
-Step 1/8 : FROM openjdk:8u151-jdk-alpine
+Step 1/8 : FROM eclipse-temurin:11-jdk-alpine
 ---> 3642e636096d
-Step 2/8 : MAINTAINER John Doe "john.doe@example.com"
+Step 2/8 : LABEL maintainer="John Doe john.doe@example.com"
 ---> Using cache
 ---> 3e1c67b067e8
 Step 3/8 : EXPOSE 8080
 ---> Using cache
 ---> 144aadd0580e
-Step 4/8 : WORKDIR /app
+Step 4/8 : WORKDIR /home/app
 ---> Using cache
 ---> c9af01e696f8
 Step 5/8 : COPY complete-0.1.jar application.jar
@@ -35,7 +35,7 @@ Step 7/8 : RUN chmod +x app-entrypoint.sh
 ---> Running in 3b41eb944045
 ---> 5f6fa6b0ab9a
 Removing intermediate container 3b41eb944045
-Step 8/8 : ENTRYPOINT /app/app-entrypoint.sh
+Step 8/8 : ENTRYPOINT ["/home/app/app-entrypoint.sh"]
 ---> Running in 3221a85ae904
 ---> 68f5588d1134
 Removing intermediate container 3221a85ae904
@@ -56,7 +56,7 @@ Total time: 11.453 secs
 ----
 $ docker images
 REPOSITORY                     TAG                 IMAGE ID            CREATED             SIZE
-grails-sample/complete         0.1                 68f5588d1134        3 minutes ago       143MB
+grails-sample/complete         0.1                 68f5588d1134        3 minutes ago       424MB
 ----
 
 
