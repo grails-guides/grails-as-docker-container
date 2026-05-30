@@ -1,0 +1,50 @@
+# ---------------------------------------------------------------------------
+# CI for grails-docker-bootbuildimage (grails8 branch)
+#
+# Matrix over the two app variants shipped by this guide:
+#   initial/  – vanilla Grails 8 starter (before Docker changes)
+#   complete/ – full customisations (bootBuildImage, Dockerfile, compose.yml)
+#
+# Each variant is tested with unit tests and Testcontainers-backed integration
+# tests.  bootBuildImage is deliberately NOT run here – it is heavy and
+# requires a Docker daemon with buildkit support, which is validated
+# separately by the guide author on each release.
+# ---------------------------------------------------------------------------
+name: Grails 8 CI
+
+on:
+  push:
+    branches:
+      - grails8
+      - '**'
+  pull_request:
+    branches:
+      - grails8
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [initial, complete]
+    defaults:
+      run:
+        working-directory: ${{ matrix.app }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Run unit and integration tests
+        run: ./gradlew test integrationTest --console=plain --stacktrace
